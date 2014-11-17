@@ -85,36 +85,32 @@ func (t Token) IsNonPunctuation() bool {
   matched, _ := regexp.MatchString("[^\\W\\d]", t.Value)
   return matched
 }
-//  
+
+func (t Token) String() (out string) {
+  out = t.Value
+
+  if t.Flags["Abbr"] {
+    out += "<A>"
+  }
+
+  if t.Flags["Ellipsis"] {
+    out += "<E>"
+  }
+
+  if t.Flags["SentenceBreak"] {
+    out += "<S>"
+  }
+
+  return
+}
+
+// Is anybody using this one
 //    def first_case
 //      return :lower if first_lower?
 //      return :upper if first_upper?
 //      return :none
 //    end
 //  
-//    def ends_with_period?
-//      @period_final
-//    end
-//  
-//    def is_ellipsis?
-//      !(@token =~ /^\.\.+$/).nil?
-//    end
-//  
-//    def is_number?
-//      @type.start_with?("##number##")
-//    end
-//  
-//    def is_initial?
-//      !(@token =~ /^[^\W\d]\.$/).nil?
-//    end
-//  
-//    def is_alpha?
-//      !(@token =~ /^[^\W\d]+$/).nil?
-//    end
-//  
-//    def is_non_punctuation?
-//      !(@type =~ /[^\W\d]/).nil?
-//    end
 //  
 //    def to_s
 //      result = @token
@@ -123,9 +119,4 @@ func (t Token) IsNonPunctuation() bool {
 //      result += '<S>' if @sentence_break
 //      result
 //    end
-
-//    def inspect
-//      "<#{to_s}>"
-//    end
-//  end
 //end

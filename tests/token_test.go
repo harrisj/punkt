@@ -1,6 +1,7 @@
 package tests
 
 import (
+  "fmt"
   "testing"
   "github.com/harrisj/punkt"
   . "gopkg.in/check.v1"
@@ -109,6 +110,13 @@ func (s *TokenSuite) TestIsNonPunctuation(c *C) {
 
   token = punkt.MakeToken("!")
   c.Assert(token.IsNonPunctuation(), Equals, false)
+}
+
+func (s *TokenSuite) TestString(c *C) {
+  token := punkt.MakeToken("foo", "Abbr", "SentenceBreak", "Ellipsis")
+
+  tokenStr := fmt.Sprintf("%v", token)
+  c.Assert(tokenStr, Equals, "foo<A><E><S>")
 }
 
 //   def test_first_case    
