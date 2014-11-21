@@ -13,15 +13,18 @@ type Token struct {
   Flags map[string]bool
 }
 
-func MakeToken(token string, flags ...string) *Token {
+type TokenOptions map[string]bool
+
+// optional argument for flags
+func MakeToken(token string, tFlagsArgs ...TokenOptions) *Token {
   typeRegexp := regexp.MustCompile("^-?[\\.,]?\\d[\\d,\\.-]*\\.?$")
   t_type := typeRegexp.ReplaceAllString(strings.ToLower(token), "##number##")
-  t_flags := make(map[string]bool)
+  t_flags := make(TokenOptions)
 
-  for _, f := range flags {
-    t_flags[f] = true
+  if len(tFlagsArgs) > 0 {
+    t_flags = tFlagsArgs[0]
   }
-  
+
   return &Token{Value: token, Type: t_type, Flags: t_flags}
 }
 

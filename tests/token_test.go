@@ -15,7 +15,14 @@ type TokenSuite struct{}
 var tokenSuite = Suite(&TokenSuite{})
 
 func (s *TokenSuite) TestTokenInit(c *C) {
-  token := punkt.MakeToken("Test", "ParagraphStart", "LineStart", "SentenceBreak", "Abbr")
+  opts := punkt.TokenOptions {
+    "ParagraphStart": true, 
+    "LineStart": true, 
+    "SentenceBreak": true, 
+    "Abbr": true,
+  }
+
+  token := punkt.MakeToken("Test", opts)
   c.Check(token.Flags["ParagraphStart"], Equals, true)
   c.Check(token.Flags["LineStart"], Equals, true)
   c.Check(token.Flags["SentenceBreak"], Equals, true)
@@ -51,7 +58,9 @@ func (s *TokenSuite) TestTypeWithoutSentencePeriod(c *C) {
   token := punkt.MakeToken("Test")
   c.Check(token.TypeWithoutSentencePeriod(), Equals, "test")
 
-  token = punkt.MakeToken("Test.", "SentenceBreak")
+  opts := make(punkt.TokenOptions)
+  opts["SentenceBreak"] = true
+  token = punkt.MakeToken("Test.", opts)
   c.Check(token.TypeWithoutSentencePeriod(), Equals, "test")
 }
 
@@ -113,7 +122,13 @@ func (s *TokenSuite) TestIsNonPunctuation(c *C) {
 }
 
 func (s *TokenSuite) TestString(c *C) {
-  token := punkt.MakeToken("foo", "Abbr", "SentenceBreak", "Ellipsis")
+  opts := punkt.TokenOptions {
+    "Abbr": true,
+    "SentenceBreak": true,
+    "Ellipsis": true,
+  }
+
+  token := punkt.MakeToken("foo", opts)
 
   tokenStr := fmt.Sprintf("%v", token)
   c.Assert(tokenStr, Equals, "foo<A><E><S>")
