@@ -69,7 +69,7 @@ const (
 // The original Python and Ruby versions use PCRE regexps with lookaheads. This functionality is not supported by Go's native Regexp
 // class and I don't want to compile in a PCRE library, so I wrote this as a crude state machine. This code could no doubt be optimized
 // but at least it has tests unlike the original Regexp in word_tokenize_test.go
-func WordTokenize(input string) (tokens []string) {
+func TokenizeTextToWords(input string) (tokens []string) {
 	RE_WORD_START := regexp.MustCompile("^[^\\(\"\\`{\\s\\[:;&\\#\\*@\\)}\\]\\-,]")
 	RE_NON_WORD := regexp.MustCompile("^[\\?!\\)\";}\\]\\*:@'\\({\\[,]")
 	RE_WHITESPACE := regexp.MustCompile("^\\s+")
@@ -145,3 +145,35 @@ func WordTokenize(input string) (tokens []string) {
 
 	return
 }
+
+// func TokenizeTextToStrings(plainText string) []string {
+// 	return wordTokenize(string)
+// }
+
+// func TokenizeTextToTokens(plainText string) (result []Token) {
+// 	paragraphStart := false
+
+// 	lines = strings.Split(plainText, "\n")
+// 	for i, line := range lines {
+// 		continue if len(line) == 0
+
+// 		stringTokens := wordTokenize(line)
+// 		firstToken := MakeToken()
+// 	} 
+// }
+
+
+//       line_tokens = @language_vars.word_tokenize(line)
+//       first_token = @token_class.new(line_tokens.shift, 
+//                        :paragraph_start => paragraph_start,
+//                        :line_start      => true)
+//       paragraph_start = false
+//       line_tokens.map! { |token| @token_class.new(token) }.unshift(first_token)
+      
+//       result += line_tokens
+//     else
+//       paragraph_start = true
+//     end
+//   end
+//   return result
+// end
