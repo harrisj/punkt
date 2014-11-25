@@ -46,6 +46,14 @@ func (p *LanguageParameters) SaveAbbrevType(s string) {
   p.AbbrevTypes[s] = true
 }
 
+func (p *LanguageParameters) DeleteAbbrevType(s string) {
+  if len(p.AbbrevTypes) == 0 {
+    return
+  }
+
+  delete(p.AbbrevTypes, s)
+}
+
 func (p *LanguageParameters) ClearAbbrevTypes() {
   p.AbbrevTypes = make(map[string]bool)
 }
@@ -89,6 +97,10 @@ func (p *LanguageParameters) ClearCollocations() {
 
 func (p *LanguageParameters) ClearOrthographicContext() {
   p.OrthographicContext = make(map[string]OrthoContext)
+}
+
+func (p *LanguageParameters) GetOrthographicContext(s string) OrthoContext {
+  return p.OrthographicContext[s]
 }
 
 func (p *LanguageParameters) AddOrthographicContext(s string, flag OrthoContext) {
