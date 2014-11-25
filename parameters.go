@@ -108,6 +108,14 @@ func (p *LanguageParameters) AddOrthographicContext(s string, flag OrthoContext)
     p.ClearOrthographicContext()
   }
 
-  p.OrthographicContext[s] = p.OrthographicContext[s] & flag
+  p.OrthographicContext[s] |= flag
+}
+
+func (p *LanguageParameters) DeleteOrthographicContext(s string, flag OrthoContext) {
+  if len(p.OrthographicContext) == 0 {
+    p.ClearOrthographicContext()
+  }
+
+  p.OrthographicContext[s] ^= flag
 }
 
