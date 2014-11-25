@@ -5,47 +5,6 @@ import (
 	"regexp"
 )
 
-type OrthoContext uint32
-
-//#####################################################################
-//{ Orthographic Context Constants
-//#####################################################################
-// The following constants are used to describe the orthographic
-// contexts in which a word can occur.  BEG=beginning, MID=middle,
-// UNK=unknown, UC=uppercase, LC=lowercase, NC=no case.
-const (
-	_                         = iota
-	ORTHO_BEG_UC OrthoContext = 1 << (1 * iota) // beginning of a sentence with upper case.
-	ORTHO_MID_UC                                // middle of a sentence with upper case.
-	ORTHO_UNK_UC                                // unknown position in a sentence with upper case.
-	ORTHO_BEG_LC                                // beginning of a sentence with lower case
-	ORTHO_MID_LC                                // middle of a sentence with lower case
-	ORTHO_UNK_LC                                // unknown position in a sentence with lower case
-)
-
-const (
-	ORTHO_UC = ORTHO_BEG_UC + ORTHO_MID_UC + ORTHO_UNK_UC
-	ORTHO_LC = ORTHO_BEG_LC + ORTHO_MID_LC + ORTHO_UNK_LC
-)
-
-type OrthoPair struct {
-	First  string
-	Second string
-}
-
-// A map from context position and first-letter case to the
-// appropriate orthographic context flag.
-// const(
-//   ORTHO_MAP = map[OrthoPair]OrthoContext {
-//     OrthoPair{"initial","upper"}: ORTHO_BEG_UC,
-//     OrthoPair{"internal","upper"}: ORTHO_MID_UC,
-//     OrthoPair{"unknown","upper"}: ORTHO_UNK_UC,
-//     OrthoPair{"initial","lower"}: ORTHO_BEG_LC,
-//     OrthoPair{"internal","lower"}: ORTHO_MID_LC,
-//     OrthoPair{"unknown","lower"}: ORTHO_UNK_LC
-//   }
-// )
-
 // for debugging reasons why it exits
 const (
 	REASON_DEFAULT_DECISION                            = "default decision"
@@ -146,34 +105,28 @@ func TokenizeTextToWords(input string) (tokens []string) {
 	return
 }
 
-// func TokenizeTextToStrings(plainText string) []string {
-// 	return wordTokenize(string)
-// }
-
-// func TokenizeTextToTokens(plainText string) (result []Token) {
+// func TokenizeTextToTokens(plainText string) (results [][]Token) {
 // 	paragraphStart := false
 
-// 	lines = strings.Split(plainText, "\n")
+// 	lines := strings.Split(plainText, "\n")
 // 	for i, line := range lines {
-// 		continue if len(line) == 0
+// 		if len(line) == 0 {
+// 			paragraphStart = true
+// 		} else {
+// 			words := TokenizeTextToWords(line)
+// 			lineTokens := make([]Token, len(words))
 
-// 		stringTokens := wordTokenize(line)
-// 		firstToken := MakeToken()
+// 			for i, v := range words {
+// 				lineTokens[i] = MakeToken(v)
+
+// 				if i == 0 {
+// 					lineTokens[i].SetFlag("ParagraphStart", paragraphStart)
+// 					lineTokens[i].SetFlag("LineStart", true)
+// 				}
+// 			}
+
+// 			results = append(results, lineTokens)
+// 		}
 // 	} 
 // }
 
-
-//       line_tokens = @language_vars.word_tokenize(line)
-//       first_token = @token_class.new(line_tokens.shift, 
-//                        :paragraph_start => paragraph_start,
-//                        :line_start      => true)
-//       paragraph_start = false
-//       line_tokens.map! { |token| @token_class.new(token) }.unshift(first_token)
-      
-//       result += line_tokens
-//     else
-//       paragraph_start = true
-//     end
-//   end
-//   return result
-// end

@@ -7,6 +7,7 @@ import (
   "unicode/utf8"
 )
 
+// FIXME: Change flags to be just bytewise on a byte to be l33t
 type Token struct {
   Value string
   Type string
@@ -26,6 +27,14 @@ func MakeToken(token string, tFlagsArgs ...TokenOptions) *Token {
   }
 
   return &Token{Value: token, Type: t_type, Flags: t_flags}
+}
+
+func (t Token) GetFlag(f string) bool {
+  return t.Flags[f]
+}
+
+func (t* Token) SetFlag(f string, b bool) {
+  t.Flags[f] = b
 }
 
 func (t Token) TypeWithoutPeriod() string {
@@ -62,6 +71,16 @@ func (t Token) FirstLower() bool {
   } else {
     runeValue, _ := utf8.DecodeRuneInString(t.Value)
     return unicode.IsLower(runeValue)
+  }
+}
+
+func (t Token) FirstCase() string {
+  if t.FirstUpper() {
+    return "upper"
+  } else if t.FirstLower() {
+    return "lower"
+  } else {
+    return "none"
   }
 }
 
