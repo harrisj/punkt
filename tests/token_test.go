@@ -51,6 +51,14 @@ func (s *TokenSuite) TestTypeWithoutPeriod(c *C) {
   c.Check(token.TypeWithoutPeriod(), Equals, "##number##")
 }
 
+func (s *TokenSuite) TestEndWithPeriod(c *C) {
+  token := punkt.MakeToken("Test")
+  c.Check(token.EndsWithPeriod(), Equals, false)
+
+  token = punkt.MakeToken("Test.")
+  c.Check(token.EndsWithPeriod(), Equals, true) 
+}
+
 func (s *TokenSuite) TestTypeWithoutSentencePeriod(c *C) {
   token := punkt.MakeToken("Test")
   c.Check(token.TypeWithoutSentencePeriod(), Equals, "test")

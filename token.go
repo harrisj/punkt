@@ -136,6 +136,10 @@ func (t Token) FirstCase() string {
   }
 }
 
+func (t Token) EndsWithPeriod() bool {
+  return strings.HasSuffix(t.Value, ".")
+}
+
 func (t Token) MatchEllipsis() bool {
   matched, _ := regexp.MatchString("^\\.\\.+$", t.Value)
   return matched
