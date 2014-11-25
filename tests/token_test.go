@@ -15,21 +15,18 @@ type TokenSuite struct{}
 var tokenSuite = Suite(&TokenSuite{})
 
 func (s *TokenSuite) TestTokenInit(c *C) {
-  opts := punkt.TokenOptions {
-    "ParagraphStart": true, 
-    "LineStart": true, 
-    "SentenceBreak": true, 
-    "Abbr": true,
-  }
+  token := punkt.MakeToken("Test")
 
-  token := punkt.MakeToken("Test", opts)
-  c.Check(token.Flags["ParagraphStart"], Equals, true)
-  c.Check(token.Flags["LineStart"], Equals, true)
-  c.Check(token.Flags["SentenceBreak"], Equals, true)
-  c.Check(token.Flags["Abbr"], Equals, true)
+  c.Check(token.IsAbbr(), Equals, false)
+}
 
-  v := token.Flags["Ellipsis"]
-  c.Check(v, Equals, false)
+func (s *TokenSuite) TestFlags(c *C) {
+  token := punkt.MakeToken("Test")
+
+  token.SetAbbr(true)
+  c.Check(token.IsAbbr(), Equals, true)
+  token.SetAbbr(false)
+  c.Check(token.IsAbbr(), Equals, false)
 }
 
 func (s *TokenSuite) TestTypeAttributes(c *C) {
@@ -58,9 +55,8 @@ func (s *TokenSuite) TestTypeWithoutSentencePeriod(c *C) {
   token := punkt.MakeToken("Test")
   c.Check(token.TypeWithoutSentencePeriod(), Equals, "test")
 
-  opts := make(punkt.TokenOptions)
-  opts["SentenceBreak"] = true
-  token = punkt.MakeToken("Test.", opts)
+  token = punkt.MakeToken("Test.")
+  token.SetSentenceBreak(true)
   c.Check(token.TypeWithoutSentencePeriod(), Equals, "test")
 }
 
@@ -88,47 +84,44 @@ func (s *TokenSuite) TestFirstLower(c *C) {
 
 func (s *TokenSuite) TestIsEllipsis(c *C) {
   token := punkt.MakeToken("...")
-  c.Assert(token.IsEllipsis(), Equals, true)
+  c.Assert(token.MatchEllipsis(), Equals, true)
 
   token = punkt.MakeToken("..")
-  c.Assert(token.IsEllipsis(), Equals, true)
+  c.Assert(token.MatchEllipsis(), Equals, true)
 
   token = punkt.MakeToken("..foo")
-  c.Assert(token.IsEllipsis(), Equals, false) 
+  c.Assert(token.MatchEllipsis(), Equals, false) 
 }
 
 func (s *TokenSuite) TestIsInitial(c *C) {
   token := punkt.MakeToken("C.")
-  c.Assert(token.IsInitial(), Equals, true)
+  c.Assert(token.MatchInitial(), Equals, true)
 
   token = punkt.MakeToken("B.M.")
-  c.Assert(token.IsInitial(), Equals, false)
+  c.Assert(token.MatchInitial(), Equals, false)
 }
 
 func (s *TokenSuite) TestIsAlpha(c *C) {
   token := punkt.MakeToken("foo")
-  c.Assert(token.IsAlpha(), Equals, true)
+  c.Assert(token.MatchAlpha(), Equals, true)
 
   token = punkt.MakeToken("!")
-  c.Assert(token.IsAlpha(), Equals, false)
+  c.Assert(token.MatchAlpha(), Equals, false)
 }
 
-func (s *TokenSuite) TestIsNonPunctuation(c *C) {
+func (s *TokenSuite) TestMatchNonPunctuation(c *C) {
   token := punkt.MakeToken("foo")
-  c.Assert(token.IsNonPunctuation(), Equals, true)
+  c.Assert(token.MatchNonPunctuation(), Equals, true)
 
   token = punkt.MakeToken("!")
-  c.Assert(token.IsNonPunctuation(), Equals, false)
+  c.Assert(token.MatchNonPunctuation(), Equals, false)
 }
 
 func (s *TokenSuite) TestString(c *C) {
-  opts := punkt.TokenOptions {
-    "Abbr": true,
-    "SentenceBreak": true,
-    "Ellipsis": true,
-  }
-
-  token := punkt.MakeToken("foo", opts)
+  token := punkt.MakeToken("foo")
+  token.SetAbbr(true)
+  token.SetSentenceBreak(true)
+  token.SetEllipsis(true)
 
   tokenStr := fmt.Sprintf("%v", token)
   c.Assert(tokenStr, Equals, "foo<A><E><S>")

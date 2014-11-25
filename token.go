@@ -7,34 +7,88 @@ import (
   "unicode/utf8"
 )
 
-// FIXME: Change flags to be just bytewise on a byte to be l33t
+type TokenFlags byte
+
+const (
+  TOK_PARAGRAPH_START TokenFlags = 1<<(1*iota)
+  TOK_LINE_START
+  TOK_SENTENCE_BREAK
+  TOK_ABBR
+  TOK_ELLIPSIS
+)
+
 type Token struct {
   Value string
   Type string
-  Flags map[string]bool
+  Flags TokenFlags
 }
-
-type TokenOptions map[string]bool
 
 // optional argument for flags
-func MakeToken(token string, tFlagsArgs ...TokenOptions) *Token {
+func MakeToken(token string) *Token {
   typeRegexp := regexp.MustCompile("^-?[\\.,]?\\d[\\d,\\.-]*\\.?$")
   t_type := typeRegexp.ReplaceAllString(strings.ToLower(token), "##number##")
-  t_flags := make(TokenOptions)
+ 
+  return &Token{Value: token, Type: t_type}
+}
 
-  if len(tFlagsArgs) > 0 {
-    t_flags = tFlagsArgs[0]
+func (t Token) IsAbbr() bool {
+  return t.Flags & TOK_ABBR != 0
+}
+
+func (t *Token) SetAbbr(b bool) {
+  if b {
+    t.Flags |= TOK_ABBR
+  } else {
+    t.Flags ^= TOK_ABBR
   }
-
-  return &Token{Value: token, Type: t_type, Flags: t_flags}
 }
 
-func (t Token) GetFlag(f string) bool {
-  return t.Flags[f]
+func (t Token) IsSentenceBreak() bool {
+  return t.Flags & TOK_SENTENCE_BREAK != 0
 }
 
-func (t* Token) SetFlag(f string, b bool) {
-  t.Flags[f] = b
+func (t *Token) SetSentenceBreak(b bool) {
+  if b {
+    t.Flags |= TOK_SENTENCE_BREAK
+  } else {
+    t.Flags ^= TOK_SENTENCE_BREAK
+  }
+}
+
+func (t Token) IsEllipsis() bool {
+  return t.Flags & TOK_ELLIPSIS != 0
+}
+
+func (t *Token) SetEllipsis(b bool) {
+  if b {
+    t.Flags |= TOK_ELLIPSIS
+  } else {
+    t.Flags ^= TOK_ELLIPSIS
+  }
+}
+
+func (t Token) IsParagraphStart() bool {
+  return t.Flags & TOK_PARAGRAPH_START != 0
+}
+
+func (t *Token) SetParagraphStart(b bool) {
+  if b {
+    t.Flags |= TOK_PARAGRAPH_START
+  } else {
+    t.Flags ^= TOK_PARAGRAPH_START
+  }
+}
+
+func (t Token) IsLineStart() bool {
+  return t.Flags & TOK_LINE_START != 0
+}
+
+func (t *Token) SetLineStart(b bool) {
+  if b {
+    t.Flags |= TOK_LINE_START
+  } else {
+    t.Flags ^= TOK_LINE_START
+  }
 }
 
 func (t Token) TypeWithoutPeriod() string {
@@ -46,9 +100,7 @@ func (t Token) TypeWithoutPeriod() string {
 }
 
 func (t Token) TypeWithoutSentencePeriod() string {
-  v, ok := t.Flags["SentenceBreak"]
-
-  if ok && v {
+  if t.IsSentenceBreak() {
     return t.TypeWithoutPeriod()
   } else {
     return t.Type
@@ -84,26 +136,26 @@ func (t Token) FirstCase() string {
   }
 }
 
-func (t Token) IsEllipsis() bool {
+func (t Token) MatchEllipsis() bool {
   matched, _ := regexp.MatchString("^\\.\\.+$", t.Value)
   return matched
 }
 
-func (t Token) IsNumber() bool {
+func (t Token) MatchNumber() bool {
   return strings.HasPrefix(t.Value, "##number##")
 }
 
-func (t Token) IsInitial() bool {
+func (t Token) MatchInitial() bool {
   matched, _ := regexp.MatchString("^[^\\W\\d]\\.$", t.Value)
   return matched
 }
 
-func (t Token) IsAlpha() bool {
+func (t Token) MatchAlpha() bool {
   matched, _ := regexp.MatchString("^[^\\W\\d]+$", t.Value)
   return matched
 }
 
-func (t Token) IsNonPunctuation() bool {
+func (t Token) MatchNonPunctuation() bool {
   matched, _ := regexp.MatchString("[^\\W\\d]", t.Value)
   return matched
 }
@@ -111,15 +163,15 @@ func (t Token) IsNonPunctuation() bool {
 func (t Token) String() (out string) {
   out = t.Value
 
-  if t.Flags["Abbr"] {
+  if t.IsAbbr() {
     out += "<A>"
   }
 
-  if t.Flags["Ellipsis"] {
+  if t.IsEllipsis() {
     out += "<E>"
   }
 
-  if t.Flags["SentenceBreak"] {
+  if t.IsSentenceBreak() {
     out += "<S>"
   }
 
