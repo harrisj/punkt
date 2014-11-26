@@ -132,7 +132,7 @@ func (s *TokenSuite) TestString(c *C) {
   token.SetEllipsis(true)
 
   tokenStr := fmt.Sprintf("%v", token)
-  c.Assert(tokenStr, Equals, "foo<A><E><S>")
+  c.Assert(tokenStr, Equals, "<<foo<A><E><S>>>")
 }
 
 //   def test_first_case    

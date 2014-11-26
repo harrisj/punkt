@@ -165,7 +165,8 @@ func (t Token) MatchNonPunctuation() bool {
 }
 
 func (t Token) String() (out string) {
-  out = t.Value
+  out = "<<"
+  out += t.Value
 
   if t.IsAbbr() {
     out += "<A>"
@@ -179,6 +180,8 @@ func (t Token) String() (out string) {
     out += "<S>"
   }
 
+  out += ">>"
+  
   return
 }
 
