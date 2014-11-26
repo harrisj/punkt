@@ -9,6 +9,8 @@ type TrainerSuite struct{}
 
 var trainerSuite = Suite(&TrainerSuite{})
 
+func (s *TokenSuite) TestRareAbbrev(c *C) {
+}
 
 // # encoding: utf-8
 // require File.expand_path(File.dirname(__FILE__) + '/../../test_helper')

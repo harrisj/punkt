@@ -32,6 +32,25 @@ func (s *AnnotateSuite) TestGuessOrthographicBoundary(c *C) {
   c.Check(GuessOrthographicBoundary(s.parameters, *token), Equals, ORTHO_BOUND_FALSE)
 }
 
+func (s *AnnotateSuite) TestAnnotateFirstPass(c *C) {
+  tokens := make([]Token, 4)
+  tokens[0] = *MakeToken("e.g.")
+  tokens[1] = *MakeToken(",")
+  tokens[2] = *MakeToken("Apple")
+  tokens[3] = *MakeToken("Computer.")
+
+  s.parameters.SaveAbbrevType("e.g")
+
+  c.Assert(s.parameters.HasAbbrevType("e.g"), Equals, true)
+
+  tokens = AnnotateFirstPass(s.parameters, tokens)
+
+  c.Check(tokens[0].IsAbbr(), Equals, true)
+  c.Check(tokens[0].IsSentenceBreak(), Equals, false)
+  c.Check(tokens[1].IsAbbr(), Equals, false)
+  c.Check(tokens[3].IsSentenceBreak(), Equals, true)
+}
+
 // func GuessOrthographicBoundary(parameters *LanguageParameters, token Token) OrthoHeuristicResult {
 //   punctRegexp := regexp.MustCompile("[;,:.!?]")
 

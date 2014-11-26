@@ -46,35 +46,40 @@ func GuessOrthographicBoundary(parameters *LanguageParameters, token Token) Orth
 }
 
 func AnnotateFirstPass(parameters *LanguageParameters, tokens []Token) []Token {
-  for _, tok := range tokens {
-    str := tok.Value
+  for i := range tokens {
+    str := tokens[i].Value
 
     switch {
     case str == "." || str == "?" || str == "!":
-      tok.SetSentenceBreak(true)
-    case tok.MatchEllipsis():
-      tok.SetEllipsis(true)
-    case tok.EndsWithPeriod():
-      tokLow := strings.ToLower(str[:len(str)-1])
+      tokens[i].SetSentenceBreak(true)
+    case tokens[i].MatchEllipsis():
+      tokens[i].SetEllipsis(true)
+    case tokens[i].EndsWithPeriod():
+      tokLow := strings.ToLower(str[0:len(str)-1])
 
-      if parameters.HasAbbrevType(tokLow) { // FIXME  || @parameters.abbreviation_types.include?(tok_low.split("-")[-1])
-        tok.SetAbbr(true)
+      tokSplit := strings.Split(tokLow, "-")
+
+      if parameters.HasAbbrevType(tokLow) || (len(tokSplit) > 1 && parameters.HasAbbrevType(tokSplit[len(tokSplit)-1])) {
+        tokens[i].SetAbbr(true)
       } else {
-        tok.SetSentenceBreak(true)
+        tokens[i].SetSentenceBreak(true)
       }
     }
   }
 
+  //fmt.Println("First Pass: ", tokens)
   return tokens
 }
 
 func AnnotateSecondPass(parameters *LanguageParameters, tokens []Token) []Token {
-  for i, tok2 := range tokens {
+  for i := range tokens {
     if i == 0 {
       continue
     }
 
-    tok1 := tokens[i-1]
+    // make sure to use pointers
+    tok1 := &tokens[i-1]
+    tok2 := &tokens[i]
 
     if tok1.EndsWithPeriod() {
       continue
