@@ -2,6 +2,7 @@ package punkt
 
 import (
   "fmt"
+  "strings"
 )
 
 type OrthoContext uint32
@@ -76,6 +77,17 @@ func (p *LanguageParameters) ClearSentenceStarters() {
 
 func collocationMapKey(s1, s2 string) (key string) {
   key = fmt.Sprintf("%v|%v", s1, s2)
+  return
+}
+
+func collocationSplitKey(in string) (s1, s2 string) {
+  arr := strings.Split(in, "|")
+
+  if len(arr) == 2 {
+    s1 = arr[0]
+    s2 = arr[1]
+  }
+
   return
 }
 

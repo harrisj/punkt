@@ -99,7 +99,7 @@ func AnnotateSecondPass(parameters *LanguageParameters, tokens []Token) []Token 
     }
 
     if (tok1.IsAbbr() || tok1.IsEllipsis()) && !(t1Initial) {
-      if GuessOrthographicBoundary(parameters, tok2) == ORTHO_BOUND_TRUE {
+      if GuessOrthographicBoundary(parameters, *tok2) == ORTHO_BOUND_TRUE {
         tok1.SetSentenceBreak(true)
         continue
       }
@@ -111,7 +111,7 @@ func AnnotateSecondPass(parameters *LanguageParameters, tokens []Token) []Token 
     }
 
     if t1Initial || t1Type == "##number##" {
-      ot := GuessOrthographicBoundary(parameters, tok2)
+      ot := GuessOrthographicBoundary(parameters, *tok2)
       if ot == ORTHO_BOUND_FALSE {
         tok1.SetSentenceBreak(false)
         tok1.SetAbbr(true)

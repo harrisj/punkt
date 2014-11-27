@@ -200,6 +200,29 @@ func DunningLogLikelihood(count_a, count_b, count_ab, n int) float64 {
   return (-2.0 * likelihood)
 }
 
+func ColLogLikelihood(count_a, count_b, count_ab, n int) float64 {
+  p := float64(count_b) / float64(n)
+  p1 := float64(count_ab) / float64(count_a)
+  p2 := float64(count_b - count_ab) / float64(n - count_a)
+
+  summand1 := float64(count_ab) * math.Log(p) + float64(count_a - count_ab) * math.Log(1.0 - p)
+  summand2 := float64(count_b - count_ab) * math.Log(p) + float64(n - count_a - count_b + count_ab) * math.Log(1.0 - p)
+
+  summand3 := float64(0)
+  if count_a != count_ab {
+    summand3 = float64(count_ab) * math.Log(p1) * float64(count_a - count_ab) * math.Log(1.0 - p1)
+  }
+
+  summand4 := float64(0)
+  if count_b != count_ab {
+    summand4 = float64(count_b - count_ab) * math.Log(p2) + float64(n - count_a - count_b + count_ab) * math.Log(1.0 - p2)
+  }
+
+  likelihood := summand1 + summand2 - summand3 - summand4
+
+  return likelihood * -2.0
+}
+
 func (t *Trainer) IsRareAbbrevType(parameters *LanguageParameters, current Token, next Token) bool {
   if current.IsAbbr() || !(current.IsSentenceBreak()) {
     return false
@@ -222,6 +245,21 @@ func (t *Trainer) IsRareAbbrevType(parameters *LanguageParameters, current Token
   } else {
     return false
   }
+}
+
+func (t *Trainer) IsPotentialSentenceStarter(current, prev Token) bool {
+  return prev.IsSentenceBreak() &&
+         !(prev.MatchNumber() || prev.MatchInitial()) &&
+         current.MatchAlpha()
+}
+
+func (t *Trainer) IsPotentialCollocation(tok1, tok2 Token) bool {
+  return (INCLUDE_ALL_COLLOCS ||
+           (INCLUDE_ABBREV_COLLOCS && tok1.IsAbbr()) ||
+              (tok1.IsSentenceBreak() &&
+                (tok1.MatchNumber() || tok2.MatchInitial()))) &&
+          tok1.MatchNonPunctuation() &&
+          tok2.MatchNonPunctuation()
 }
 
 func (t *Trainer) BuildOrthographyTables(parameters *LanguageParameters, tokens []Token) {
@@ -258,16 +296,89 @@ func (t *Trainer) BuildOrthographyTables(parameters *LanguageParameters, tokens 
   }
 }
 
+type foundSentenceStarter struct {
+  Type1 string
+  Score float64
+}
+
+type foundCollocation struct {
+  Type1 string
+  Type2 string
+  Score float64
+}
 
 func (t *Trainer) FinalizeTraining(parameters *LanguageParameters) {
-  // clear sentence starters
+  parameters.ClearSentenceStarters()
+  a := t.FindSentenceStarters(parameters) 
 
-  // clear collocations
+  for _, x := range a {
+    parameters.SaveSentenceStarter(x.Type1)
+  }
 
+  parameters.ClearCollocations()
+  b := t.FindCollocations(parameters)
+
+  for _, y := range b {
+    parameters.SaveCollocation(y.Type1, y.Type2)
+  }
+      
   t.Finalized = true
 }
-        
 
+func (t *Trainer) FindSentenceStarters(parameters *LanguageParameters) []foundSentenceStarter {
+  samples := t.SentenceStarterFdist.OrderedSamples()
+  out := make([]foundSentenceStarter, 0)
+
+  for _, cs := range samples {
+    if len(cs.Sample) == 0 {
+      continue
+    }
+
+    typeCount := t.TypeFdist.Get(cs.Sample) + t.TypeFdist.Get(fmt.Sprintf("%v.", cs.Sample))
+
+    if typeCount < cs.Count {
+      continue
+    }
+
+    ll := ColLogLikelihood(t.SentenceBreakCount, typeCount, cs.Count, t.TypeFdist.N)
+
+    if ll >= SENT_STARTER_CUTOFF && ((float64(t.TypeFdist.N) / float64(t.SentenceBreakCount)) > (float64(typeCount) / float64(cs.Count))) {
+      out = append(out, foundSentenceStarter{cs.Sample, ll})
+    }
+  }
+
+  return out
+}
+
+func (t *Trainer) FindCollocations(parameters *LanguageParameters) []foundCollocation {
+  samples := t.CollocationFdist.OrderedSamples()
+  out := make([]foundCollocation, 0)
+
+  for _, cs := range samples {
+    type1, type2 := collocationSplitKey(cs.Sample)
+
+    if len(type1) == 0 || len(type2) == 0 {
+      continue
+    }
+
+    if parameters.HasSentenceStarter(type2) {
+      continue
+    }
+
+    type1Count := t.TypeFdist.Get(type1) + t.TypeFdist.Get(fmt.Sprintf("%v.", type1))
+    type2Count := t.TypeFdist.Get(type2) + t.TypeFdist.Get(fmt.Sprintf("%v.", type2))
+
+    if type1Count > 1 && type2Count > 1 && cs.Count > MIN_COLLOC_FREQ && cs.Count <= type1Count && cs.Count <= type2Count {
+      ll := ColLogLikelihood(type1Count, type2Count, cs.Count, t.TypeFdist.N)
+
+      if ll >= COLLOCATION_CUTOFF && ((float64(t.TypeFdist.N)/float64(type1Count)) > (float64(type2Count)/float64(cs.Count))) {
+        out = append(out, foundCollocation{Type1: type1, Type2: type2, Score: ll})
+      }
+    }
+  }
+
+  return out
+}
     
 //     def train(text_or_tokens)
 //       if text_or_tokens.kind_of?(String)
@@ -336,42 +447,6 @@ func (t *Trainer) FinalizeTraining(parameters *LanguageParameters) {
 //       end
 //     end
     
-//     def dunning_log_likelihood(count_a, count_b, count_ab, n)
-//       p1 = count_b.to_f / n
-//       p2 = 0.99
-
-//       null_hypo = (count_ab.to_f * Math.log(p1) +
-//                    (count_a - count_ab) * Math.log(1.0 - p1))
-//       alt_hypo  = (count_ab.to_f * Math.log(p2) +
-//                    (count_a - count_ab) * Math.log(1.0 - p2))
-
-//       likelihood = null_hypo - alt_hypo
-
-//       return (-2.0 * likelihood)
-//     end
-    
-//     def get_orthography_data(tokens)
-//       context = :internal
-      
-//       tokens.each do |aug_token|
-//         context = :initial if aug_token.paragraph_start && context != :unknown
-//         context = :unknown if aug_token.line_start && context == :internal
-        
-//         type = aug_token.type_without_sentence_period
-
-//         flag = Punkt::ORTHO_MAP[[context, aug_token.first_case]] || 0
-//         @parameters.add_orthographic_context(type, flag) if flag
-        
-//         if aug_token.sentence_break
-//           context = !(aug_token.is_number? || aug_token.is_initial?) ? :initial : :unknown
-//         elsif aug_token.ellipsis || aug_token.abbr
-//           context = :unknown
-//         else
-//           context = :internal
-//         end
-//       end
-//     end
-    
 //     def is_rare_abbreviation_type?(current_token, next_token)
 //       return false if current_token.abbr || !current_token.sentence_break
       
@@ -389,95 +464,9 @@ func (t *Trainer) FinalizeTraining(parameters *LanguageParameters) {
 //       end      
 //     end
     
-//     def is_potential_sentence_starter?(current_token, previous_token)
-//       return (previous_token.sentence_break && 
-//               !(previous_token.is_number? || previous_token.is_initial?) && 
-//               current_token.is_alpha?)
-//     end
+
     
-//     def is_potential_collocation?(tok1, tok2)
-//       return ((INCLUDE_ALL_COLLOCS || 
-//                   (INCLUDE_ABBREV_COLLOCS && tok1.abbr) || 
-//                   (tok1.sentence_break && 
-//                     (tok1.is_number? || tok2.is_initial?))) &&
-//                 tok1.is_non_punctuation? &&
-//                 tok2.is_non_punctuation?)
-//     end
-    
-//     def find_sentence_starters(&block)
-//       @sentence_starter_fdist.each do |type, type_at_break_count|
-//         next if !type
-        
-//         type_count = @type_fdist[type] + @type_fdist[type + "."]
-        
-//         next if type_count < type_at_break_count
-        
-//         ll = col_log_likelihood(@sentence_break_count, 
-//                                 type_count, 
-//                                 type_at_break_count, 
-//                                 @type_fdist.N)
-              
-//         if (ll >= SENT_STARTER && 
-//            @type_fdist.N.to_f/@sentence_break_count > type_count.to_f/type_at_break_count)
-//           yield(type, ll)
-//         end
-//       end
-//     end
-    
-//     def col_log_likelihood(count_a, count_b, count_ab, n)
-//       p = 1.0 * count_b / n
-//       p1 = 1.0 * count_ab / count_a
-//       p2 = 1.0 * (count_b - count_ab) / (n - count_a)
 
-//       summand1 = (count_ab * Math.log(p) +
-//                   (count_a - count_ab) * Math.log(1.0 - p))
-
-//       summand2 = ((count_b - count_ab) * Math.log(p) +
-//                   (n - count_a - count_b + count_ab) * Math.log(1.0 - p))
-
-//       if count_a == count_ab
-//           summand3 = 0
-//       else
-//           summand3 = (count_ab * Math.log(p1) +
-//                       (count_a - count_ab) * Math.log(1.0 - p1))
-//       end
-
-//       if count_b == count_ab
-//           summand4 = 0
-//       else
-//           summand4 = ((count_b - count_ab) * Math.log(p2) +
-//                       (n - count_a - count_b + count_ab) * Math.log(1.0 - p2))
-//       end
-
-//       likelihood = summand1 + summand2 - summand3 - summand4
-
-//       return (-2.0 * likelihood)
-//     end
-    
-//     def find_collocations(&block)
-//       @collocation_fdist.each do |types, col_count|
-//         type1, type2 = types
-        
-//         next if type1.nil? || type2.nil?
-//         next if @parameters.sentence_starters.include?(type2)
-        
-//         type1_count = @type_fdist[type1] + @type_fdist[type1 + "."]
-//         type2_count = @type_fdist[type2] + @type_fdist[type2 + "."]
-        
-//         if (type1_count > 1 && type2_count > 1 &&
-//             MIN_COLLOC_FREQ < col_count &&
-//             col_count <= [type1_count, type2_count].min)
-          
-//           ll = col_log_likelihood(type1_count, type2_count,
-//                                   col_count, @type_fdist.N)
-                                  
-//           if (ll >= COLLOCATION &&
-//               @type_fdist.N.to_f/type1_count > type2_count.to_f/col_count)
-//             yield([type1, type2], ll)
-//           end
-//         end
-//       end
-//     end
     
 //   end
 // end

@@ -51,6 +51,16 @@ func (s *AnnotateSuite) TestAnnotateFirstPass(c *C) {
   c.Check(tokens[3].IsSentenceBreak(), Equals, true)
 }
 
+func (s *AnnotateSuite) TestAnnotateSecondPass(c *C) {
+  tokens := make([]Token, 6)
+  tokens[0] = *MakeToken("At")
+  tokens[1] = *MakeToken("9")
+  tokens[2] = *MakeToken("P.M.")
+  tokens[3] = *MakeToken(",")
+  tokens[4] = *MakeToken("I")
+  tokens[5] = *MakeToken("napped.")
+}
+
 // func GuessOrthographicBoundary(parameters *LanguageParameters, token Token) OrthoHeuristicResult {
 //   punctRegexp := regexp.MustCompile("[;,:.!?]")
 
