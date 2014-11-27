@@ -127,14 +127,14 @@ func (t *Trainer) trainFromTokens(tokens []Token) *LanguageParameters {
       parameters.SaveAbbrevType(tok1.TypeWithoutPeriod())
     }
 
-    // if t.PotentialSentenceStarter(tok1, tok2) {
-    //   SentenceStarterFdist.Inc(tok2.Type)
-    // }
+    if t.IsPotentialSentenceStarter(tok1, tok2) {
+      t.SentenceStarterFdist.Inc(tok2.Type)
+    }
 
-    // if t.PotentialCollocation(tok1, tok2) {
-    //   colloc_key := fmt.Sprintf("%v|%v", tok1.TypeWithoutPeriod, tok2.TypeWithoutPeriod)
-    //   CollocationFdist.Inc(colloc_key)
-    // }
+    if t.IsPotentialCollocation(tok1, tok2) {
+      colloc_key := collocationMapKey(tok1.TypeWithoutPeriod(), tok2.TypeWithoutPeriod())
+      t.CollocationFdist.Inc(colloc_key)
+    }
   }
 
   return parameters
