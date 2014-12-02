@@ -20,6 +20,8 @@ func (a ByCount) Less(i, j int) bool { return a[i].Count > a[j].Count } // desce
 type FrequencyDistribution struct {
   N int
   Counts map[string]int
+
+  // These are cached once calculated
   MaxSample SampleCount
   Sorted []SampleCount
 }
@@ -28,6 +30,7 @@ func (f *FrequencyDistribution) Clear() {
   f.N = 0
   // FIXME: Is this cool?
   f.Counts = make(map[string]int)
+  f.ClearCaches()
 }
 
 func (f *FrequencyDistribution) ClearCaches() {
