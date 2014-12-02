@@ -3,6 +3,9 @@ package punkt
 import (
   "fmt"
   "strings"
+  "io/ioutil"
+  "sort"
+  "encoding/json"
 )
 
 type OrthoContext uint32
@@ -96,11 +99,15 @@ func (p LanguageParameters) HasCollocation(s1, s2 string) bool {
 }
 
 func (p *LanguageParameters) SaveCollocation(s1, s2 string) {
-  if len(p.Collocations) == 0 {
+  p.saveRawCollocation(collocationMapKey(s1,s2))
+}
+
+func (p *LanguageParameters) saveRawCollocation(s string) {
+    if len(p.Collocations) == 0 {
     p.ClearCollocations()
   }
 
-  p.Collocations[collocationMapKey(s1,s2)] = true
+  p.Collocations[s] = true
 }
 
 func (p *LanguageParameters) ClearCollocations() {
@@ -123,11 +130,78 @@ func (p *LanguageParameters) AddOrthographicContext(s string, flag OrthoContext)
   p.OrthographicContext[s] |= flag
 }
 
+func (p *LanguageParameters) SetOrthographicContext(s string, flags OrthoContext) {
+  if len(p.OrthographicContext) == 0 {
+    p.ClearOrthographicContext()
+  }
+
+  p.OrthographicContext[s] = flags
+}
+
 func (p *LanguageParameters) DeleteOrthographicContext(s string, flag OrthoContext) {
   if len(p.OrthographicContext) == 0 {
     p.ClearOrthographicContext()
   }
 
   p.OrthographicContext[s] ^= flag
+}
+
+type JsonParameters struct {
+  Sentence_starters []string
+  Abbrev_types []string
+  Collocations []string
+  Ortho_context map[string]OrthoContext
+}
+
+func LoadParametersFromJSON(path string) (* LanguageParameters) {
+  contents, err := ioutil.ReadFile(path)
+  if err != nil {
+    panic(err)
+  }
+
+  var m JsonParameters
+
+  json.Unmarshal(contents, &m)
+
+  // now copy over into an object
+  p := new(LanguageParameters)
+
+  for _, v := range m.Abbrev_types {
+    p.SaveAbbrevType(v)
+  }
+
+  for _, v := range m.Collocations {
+    p.saveRawCollocation(v)
+  }
+
+  for _, v := range m.Sentence_starters {
+    p.SaveSentenceStarter(v)
+  }
+
+  for k, v := range m.Ortho_context {
+    p.SetOrthographicContext(k, v)
+  }
+
+  return p
+}
+
+func (p LanguageParameters) InspectSet(pSet map[string]bool) (out string) {
+  var keys []string
+
+  for k := range pSet {
+    keys = append(keys, k)
+  }
+
+  sort.Strings(keys)
+
+  for _, k := range keys {
+    out += fmt.Sprintf("\"%s\",", k)
+  }
+
+  return
+}
+
+func (p LanguageParameters) String() (out string) {
+  return fmt.Sprintf("LP Abbrev: %s\nColloc: %s\nSentStart: %s\nOrtho: %#v", p.InspectSet(p.AbbrevTypes), p.InspectSet(p.Collocations), p.InspectSet(p.SentenceStarters), p.OrthographicContext)
 }
 

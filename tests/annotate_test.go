@@ -17,27 +17,27 @@ func (s *AnnotateSuite) SetUpTest(c *C) {
 
 func (s *AnnotateSuite) TestGuessOrthographicBoundary(c *C) {
   token := MakeToken("A;B")
-  c.Check(GuessOrthographicBoundary(s.parameters, *token), Equals, ORTHO_BOUND_FALSE)
+  c.Check(GuessOrthographicBoundary(s.parameters, token), Equals, ORTHO_BOUND_FALSE)
 
   token = MakeToken("This")
-  c.Check(GuessOrthographicBoundary(s.parameters, *token), Equals, ORTHO_BOUND_UNK)
+  c.Check(GuessOrthographicBoundary(s.parameters, token), Equals, ORTHO_BOUND_UNK)
 
   // add to parameters
   s.parameters.AddOrthographicContext(token.TypeWithoutSentencePeriod(), ORTHO_LC)
-  c.Check(GuessOrthographicBoundary(s.parameters, *token), Equals, ORTHO_BOUND_TRUE)
+  c.Check(GuessOrthographicBoundary(s.parameters, token), Equals, ORTHO_BOUND_TRUE)
 
   token = MakeToken("this")
-  c.Check(GuessOrthographicBoundary(s.parameters, *token), Equals, ORTHO_BOUND_UNK)
+  c.Check(GuessOrthographicBoundary(s.parameters, token), Equals, ORTHO_BOUND_UNK)
   s.parameters.AddOrthographicContext(token.TypeWithoutSentencePeriod(), ORTHO_UC)
-  c.Check(GuessOrthographicBoundary(s.parameters, *token), Equals, ORTHO_BOUND_FALSE)
+  c.Check(GuessOrthographicBoundary(s.parameters, token), Equals, ORTHO_BOUND_FALSE)
 }
 
 func (s *AnnotateSuite) TestAnnotateFirstPass(c *C) {
-  tokens := make([]Token, 4)
-  tokens[0] = *MakeToken("e.g.")
-  tokens[1] = *MakeToken(",")
-  tokens[2] = *MakeToken("Apple")
-  tokens[3] = *MakeToken("Computer.")
+  tokens := make([]*Token, 4)
+  tokens[0] = MakeToken("e.g.")
+  tokens[1] = MakeToken(",")
+  tokens[2] = MakeToken("Apple")
+  tokens[3] = MakeToken("Computer.")
 
   s.parameters.SaveAbbrevType("e.g")
 
@@ -52,13 +52,15 @@ func (s *AnnotateSuite) TestAnnotateFirstPass(c *C) {
 }
 
 func (s *AnnotateSuite) TestAnnotateSecondPass(c *C) {
-  tokens := make([]Token, 6)
-  tokens[0] = *MakeToken("At")
-  tokens[1] = *MakeToken("9")
-  tokens[2] = *MakeToken("P.M.")
-  tokens[3] = *MakeToken(",")
-  tokens[4] = *MakeToken("I")
-  tokens[5] = *MakeToken("napped.")
+  // words := TokenizeTextToWords("At 9 P.M., I went to bed.")
+
+  // tokens := make([]Token, len(words))
+  // for i, w := range words {
+  //   tokens[i] = *MakeToken(w)
+  // }
+  // str := "When Gregor Samsa woke up one morning from unsettling dreams, he found himself changed in his bed into a monstrous vermin. He was lying on his back as hard as armor plate, and when he lifted his head a little, he saw his vaulted brown belly, sectioned by arch-shaped ribs, to whose dome the cover, about to slide off completely, could barely cling. His many legs, pitifully thin compared with the size of the rest of him, were waving helplessly before his eyes."
+  
+  // parameters := t.TrainWithText(str)
 }
 
 // func GuessOrthographicBoundary(parameters *LanguageParameters, token Token) OrthoHeuristicResult {

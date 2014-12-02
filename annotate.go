@@ -3,6 +3,7 @@ package punkt
 import (
   "strings"
   "regexp"
+  _ "fmt"
 )
 
 // A map from context position and first-letter case to the
@@ -27,7 +28,7 @@ const (
 // the orthographic heuristic, which decides for a token following an abbreviation or an ellipsis on the basis 
 // of the orthographic statistics gathered for all word types whether it represents good evidence for a preceding
 // sentence boundary or not.
-func GuessOrthographicBoundary(parameters *LanguageParameters, token Token) OrthoHeuristicResult {
+func GuessOrthographicBoundary(parameters *LanguageParameters, token *Token) OrthoHeuristicResult {
   punctRegexp := regexp.MustCompile("[;,:.!?]")
 
   if punctRegexp.MatchString(token.Value) {
@@ -45,7 +46,7 @@ func GuessOrthographicBoundary(parameters *LanguageParameters, token Token) Orth
   }
 }
 
-func AnnotateFirstPass(parameters *LanguageParameters, tokens []Token) []Token {
+func AnnotateFirstPass(parameters *LanguageParameters, tokens []*Token) []*Token {
   for i := range tokens {
     str := tokens[i].Value
 
@@ -71,15 +72,17 @@ func AnnotateFirstPass(parameters *LanguageParameters, tokens []Token) []Token {
   return tokens
 }
 
-func AnnotateSecondPass(parameters *LanguageParameters, tokens []Token) []Token {
+func AnnotateSecondPass(parameters *LanguageParameters, tokens []*Token) []*Token {
   for i := range tokens {
     if i == 0 {
       continue
     }
 
     // make sure to use pointers
-    tok1 := &tokens[i-1]
-    tok2 := &tokens[i]
+    tok1 := tokens[i-1]
+    tok2 := tokens[i]
+
+    //fmt.Println(tok1, tok2)
 
     if tok1.EndsWithPeriod() {
       continue
@@ -99,7 +102,7 @@ func AnnotateSecondPass(parameters *LanguageParameters, tokens []Token) []Token 
     }
 
     if (tok1.IsAbbr() || tok1.IsEllipsis()) && !(t1Initial) {
-      if GuessOrthographicBoundary(parameters, *tok2) == ORTHO_BOUND_TRUE {
+      if GuessOrthographicBoundary(parameters, tok2) == ORTHO_BOUND_TRUE {
         tok1.SetSentenceBreak(true)
         continue
       }
@@ -111,7 +114,7 @@ func AnnotateSecondPass(parameters *LanguageParameters, tokens []Token) []Token 
     }
 
     if t1Initial || t1Type == "##number##" {
-      ot := GuessOrthographicBoundary(parameters, *tok2)
+      ot := GuessOrthographicBoundary(parameters, tok2)
       if ot == ORTHO_BOUND_FALSE {
         tok1.SetSentenceBreak(false)
         tok1.SetAbbr(true)
@@ -128,6 +131,12 @@ func AnnotateSecondPass(parameters *LanguageParameters, tokens []Token) []Token 
     }
   }
 
+  return tokens
+}
+
+func AnnotateTokens(parameters *LanguageParameters, tokens []*Token) []*Token {
+  tokens = AnnotateFirstPass(parameters, tokens)
+  tokens = AnnotateSecondPass(parameters, tokens)
   return tokens
 }
 

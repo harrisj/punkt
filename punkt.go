@@ -3,6 +3,7 @@ package punkt
 import (
 	//"fmt"
 	"regexp"
+	"strings"
 )
 
 // for debugging reasons why it exits
@@ -28,7 +29,7 @@ const (
 // The original Python and Ruby versions use PCRE regexps with lookaheads. This functionality is not supported by Go's native Regexp
 // class and I don't want to compile in a PCRE library, so I wrote this as a crude state machine. This code could no doubt be optimized
 // but at least it has tests unlike the original Regexp in word_tokenize_test.go
-func TokenizeTextToWords(input string) (tokens []string) {
+func SplitTextIntoWords(input string) (tokens []string) {
 	RE_WORD_START := regexp.MustCompile("^[^\\(\"\\`{\\s\\[:;&\\#\\*@\\)}\\]\\-,]")
 	RE_NON_WORD := regexp.MustCompile("^[\\?!\\)\";}\\]\\*:@'\\({\\[,]")
 	RE_WHITESPACE := regexp.MustCompile("^\\s+")
@@ -105,28 +106,31 @@ func TokenizeTextToWords(input string) (tokens []string) {
 	return
 }
 
-// func TokenizeTextToTokens(plainText string) (results [][]Token) {
-// 	paragraphStart := false
+func TokenizeText(plainText string) []*Token {
+	paragraphStart := false
 
-// 	lines := strings.Split(plainText, "\n")
-// 	for i, line := range lines {
-// 		if len(line) == 0 {
-// 			paragraphStart = true
-// 		} else {
-// 			words := TokenizeTextToWords(line)
-// 			lineTokens := make([]Token, len(words))
+	lines := strings.Split(plainText, "\n")
+	out := make([]*Token, 0)
 
-// 			for i, v := range words {
-// 				lineTokens[i] = MakeToken(v)
+	for _, line := range lines {
+		if len(line) == 0 {
+			paragraphStart = true
+		} else {
+			words := SplitTextIntoWords(line)
 
-// 				if i == 0 {
-// 					lineTokens[i].SetFlag("ParagraphStart", paragraphStart)
-// 					lineTokens[i].SetFlag("LineStart", true)
-// 				}
-// 			}
+			for j, v := range words {
+				t := MakeToken(v)
 
-// 			results = append(results, lineTokens)
-// 		}
-// 	} 
-// }
+				if j == 0 {
+					t.SetParagraphStart(paragraphStart)
+					t.SetLineStart(true)
+				}
 
+				paragraphStart = false
+				out = append(out, t)
+			}
+		}
+	}
+
+	return out 
+}

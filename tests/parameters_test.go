@@ -20,3 +20,8 @@ func (s *LanguageParametersSuite) TestOrthographicContext(c *C) {
   p.DeleteOrthographicContext("Dog", ORTHO_LC)
   c.Check(p.GetOrthographicContext("Dog"), Equals, OrthoContext(0))
 }
+
+// func (s *LanguageParametersSuite) TestLoadFromJSON(c *C) {
+//   p := LoadParametersFromJSON("../data/english.json")
+//   c.Check(len(p.))
+// }

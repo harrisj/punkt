@@ -59,21 +59,22 @@ type AbbrevClassification struct {
 }
 
 func (t *Trainer) TrainWithText(text string) *LanguageParameters {
-  tokens := TokenizeTextToWords(text)
+  tokens := SplitTextIntoWords(text)
   return t.TrainWithTokenizedText(tokens)
 }
 
 func (t *Trainer) TrainWithTokenizedText(textTokens []string) *LanguageParameters {
-  tokens := make([]Token, len(textTokens))
+  tokens := make([]*Token, len(textTokens))
   for i := range textTokens {
-    tokens[i] = *MakeToken(textTokens[i])
+    tokens[i] = MakeToken(textTokens[i])
   }
 
-  return t.trainFromTokens(tokens)
+  params := t.trainFromTokens(tokens)
+  return params
 }
 
 // private methods
-func (t *Trainer) trainFromTokens(tokens []Token) *LanguageParameters {
+func (t *Trainer) trainFromTokens(tokens []*Token) *LanguageParameters {
   uniqueTypes := map[string]bool{}
   parameters := new(LanguageParameters)
 
@@ -137,6 +138,7 @@ func (t *Trainer) trainFromTokens(tokens []Token) *LanguageParameters {
     }
   }
 
+  t.FinalizeTraining(parameters)
   return parameters
 }
 
@@ -223,7 +225,7 @@ func ColLogLikelihood(count_a, count_b, count_ab, n int) float64 {
   return likelihood * -2.0
 }
 
-func (t *Trainer) IsRareAbbrevType(parameters *LanguageParameters, current Token, next Token) bool {
+func (t *Trainer) IsRareAbbrevType(parameters *LanguageParameters, current *Token, next *Token) bool {
   if current.IsAbbr() || !(current.IsSentenceBreak()) {
     return false
   }
@@ -247,13 +249,13 @@ func (t *Trainer) IsRareAbbrevType(parameters *LanguageParameters, current Token
   }
 }
 
-func (t *Trainer) IsPotentialSentenceStarter(current, prev Token) bool {
+func (t *Trainer) IsPotentialSentenceStarter(current, prev *Token) bool {
   return prev.IsSentenceBreak() &&
          !(prev.MatchNumber() || prev.MatchInitial()) &&
          current.MatchAlpha()
 }
 
-func (t *Trainer) IsPotentialCollocation(tok1, tok2 Token) bool {
+func (t *Trainer) IsPotentialCollocation(tok1, tok2 *Token) bool {
   return (INCLUDE_ALL_COLLOCS ||
            (INCLUDE_ABBREV_COLLOCS && tok1.IsAbbr()) ||
               (tok1.IsSentenceBreak() &&
@@ -262,7 +264,7 @@ func (t *Trainer) IsPotentialCollocation(tok1, tok2 Token) bool {
           tok2.MatchNonPunctuation()
 }
 
-func (t *Trainer) BuildOrthographyTables(parameters *LanguageParameters, tokens []Token) {
+func (t *Trainer) BuildOrthographyTables(parameters *LanguageParameters, tokens []*Token) {
   context := "internal"
 
   for _, tok := range tokens {
