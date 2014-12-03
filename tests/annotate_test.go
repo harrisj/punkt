@@ -68,7 +68,7 @@ func (s *AnnotateSuite) TestTokenizer(c *C) {
   str := "When Mr. Gregor Samsa woke up one morning from unsettling dreams, he found himself changed in his bed into a monstrous vermin. He was lying on his back as hard as armor plate, and when he lifted his head a little, he saw his vaulted brown belly, sectioned by arch-shaped ribs, to whose dome the cover, about to slide off completely, could barely cling. His many legs, pitifully thin compared with the size of the rest of him, were waving helplessly before his eyes."
 
   t := new(Tokenizer)
-  t.SetParameters(LoadParametersFromJSON("../data/english.json"))
+  t.SetLanguage("english")
 
   fmt.Printf("%#v\n", t.SentencesFromText(str))
 }

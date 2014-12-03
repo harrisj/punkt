@@ -12,6 +12,11 @@ func (t *Tokenizer) SetParameters(l *LanguageParameters) {
   t.parameters = l
 }
 
+// A shortcut to set the parameters for a specific language
+func (t *Tokenizer) SetLanguage(lang string) {
+  t.SetParameters(LoadLanguage(lang))
+}
+
 func (t Tokenizer) SentencesFromText(text string) (sentences []string) {
   sentences = t.splitIntoSentences(text)
   //sentences = t.realignBoundaries(text, sentences) //if options[:realign_boundaries]
@@ -79,69 +84,6 @@ func (t Tokenizer) textContainsSentenceBreak(text string) bool {
 }
 
 
-      // result = []
-      // last_break = 0
-      // current_sentence_start = 0
-      // while match = @language_vars.re_period_context.match(text, last_break)
-      //   context = match[0] + match[:after_tok]
-      //   if text_contains_sentence_break?(context)
-      //     result << [current_sentence_start, (match.end(0)-1)]
-      //     match[:next_tok] ? current_sentence_start = match.begin(:next_tok) : current_sentence_start = match.end(0)          
-      //   end
-      //   if match[:next_tok]
-      //     last_break = match.begin(:next_tok)
-      //   else
-      //     last_break = match.end(0)
-      //   end
-      // end
-      // result << [current_sentence_start, (text.size-1)]
-
-//     def split_in_sentences(text)
-//       result = []
-//       last_break = 0
-//       current_sentence_start = 0
-//       while match = @language_vars.re_period_context.match(text, last_break)
-//         context = match[0] + match[:after_tok]
-//         if text_contains_sentence_break?(context)
-//           result << [current_sentence_start, (match.end(0)-1)]
-//           match[:next_tok] ? current_sentence_start = match.begin(:next_tok) : current_sentence_start = match.end(0)          
-//         end
-//         if match[:next_tok]
-//           last_break = match.begin(:next_tok)
-//         else
-//           last_break = match.end(0)
-//         end
-//       end
-//       result << [current_sentence_start, (text.size-1)]
-//     end
-
-// module Punkt
-//   class SentenceTokenizer < Base
-//     def initialize(train_text_or_parameters,
-//                    language_vars = Punkt::LanguageVars.new, 
-//                    token_class   = Punkt::Token)
-                   
-//       super(language_vars, token_class)
-      
-//       @trainer = nil
-      
-//       if train_text_or_parameters.kind_of?(String)
-//         @parameters = train(train_text_or_parameters)
-//       elsif train_text_or_parameters.kind_of?(Punkt::Parameters) 
-//         @parameters = train_text_or_parameters
-//       else
-//         raise "You need to pass trainer parameters or a text to train."
-//       end
-//     end
-    
-//     def sentences_from_text(text, options = {})
-//       sentences = split_in_sentences(text)
-//       sentences = realign_boundaries(text, sentences) if options[:realign_boundaries]
-//       sentences = self.class.send(options[:output], text, sentences) if options[:output]
-      
-//       return sentences
-//     end
-//     alias_method :tokenize, :sentences_from_text
     
 //     def sentences_from_tokens(tokens)
 //       tokens = annotate_tokens(tokens.map { |t| @token_class.new(t) })

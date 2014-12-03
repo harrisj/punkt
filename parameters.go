@@ -5,6 +5,8 @@ import (
   "strings"
   "io/ioutil"
   "sort"
+  "regexp"
+  "net/http"
   "encoding/json"
 )
 
@@ -153,12 +155,35 @@ type JsonParameters struct {
   Ortho_context map[string]OrthoContext
 }
 
-func LoadParametersFromJSON(path string) (* LanguageParameters) {
-  contents, err := ioutil.ReadFile(path)
-  if err != nil {
-    panic(err)
-  }
+// This is a hack since I don't know how to just load from files in the repo, so will pull from Github
+func LoadLanguage(language string) (* LanguageParameters) {
+  url := fmt.Sprintf("https://raw.githubusercontent.com/harrisj/punkt/master/data/%s.json", language)
+  return LoadParametersFromJSON(url)
+}
 
+func LoadParametersFromJSON(path string) (* LanguageParameters) {
+  urlRegexp := regexp.MustCompile("^http(s?)://")
+
+  if urlRegexp.MatchString(path) {
+    // load from URL
+    resp, err := http.Get(path)
+    if err != nil {
+      panic(err)
+    }
+    defer resp.Body.Close()
+    contents, err := ioutil.ReadAll(resp.Body)
+    return LoadParametersFromJSONString(contents)
+  } else {
+    contents, err := ioutil.ReadFile(path)
+    if err != nil {
+      panic(err)
+    }
+
+    return LoadParametersFromJSONString(contents)
+  }
+}
+
+func LoadParametersFromJSONString(contents []byte) (* LanguageParameters) {
   var m JsonParameters
 
   json.Unmarshal(contents, &m)
