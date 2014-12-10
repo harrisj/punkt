@@ -185,19 +185,3 @@ func (t Token) String() (out string) {
   return
 }
 
-// Is anybody using this one
-//    def first_case
-//      return :lower if first_lower?
-//      return :upper if first_upper?
-//      return :none
-//    end
-//  
-//  
-//    def to_s
-//      result = @token
-//      result += '<A>' if @abbr
-//      result += '<E>' if @ellipsis
-//      result += '<S>' if @sentence_break
-//      result
-//    end
-//end
