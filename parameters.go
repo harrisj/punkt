@@ -157,8 +157,14 @@ type JsonParameters struct {
 
 // This is a hack since I don't know how to just load from files in the repo, so will pull from Github
 func LoadLanguage(language string) (* LanguageParameters) {
-  url := fmt.Sprintf("https://raw.githubusercontent.com/harrisj/punkt/master/data/%s.json", language)
-  return LoadParametersFromJSON(url)
+  path := fmt.Sprintf("data/%s.json", language)
+  data, err := Asset(path)
+
+  if err != nil {
+    panic(err)
+  }
+
+  return LoadParametersFromJSONString(data)
 }
 
 func LoadParametersFromJSON(path string) (* LanguageParameters) {
