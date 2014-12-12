@@ -1,4 +1,4 @@
-package tests
+package punkt
 
 import (
   "github.com/harrisj/punkt"

@@ -1,4 +1,4 @@
-package tests
+package punkt
 
 import (
   "fmt"
@@ -135,26 +135,4 @@ func (s *TokenSuite) TestString(c *C) {
   c.Assert(tokenStr, Equals, "<<foo<A><E><S>>>")
 }
 
-//   def test_first_case    
-//     token = Punkt::Token.new("Test")
-//     assert_equal :upper, token.first_case
-
-//     token = Punkt::Token.new("Índico")
-//     assert_equal :upper, token.first_case
-
-//     token = Punkt::Token.new("test.")
-//     assert_equal :lower, token.first_case
-    
-//     token = Punkt::Token.new("@")
-//     assert_equal :none, token.first_case
-//   end
-  
-  
-//   def test_to_s_and_inspect
-//     token = Punkt::Token.new("foo", :abbr => true, :sentence_break => true, :ellipsis => true)
-    
-//     assert_equal "<foo<A><E><S>>", token.inspect
-//   end
-  
-// end
 

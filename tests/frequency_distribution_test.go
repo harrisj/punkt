@@ -1,4 +1,4 @@
-package tests
+package punkt
 
 import (
   "math"
@@ -95,11 +95,3 @@ func (s *FrequencyDistributionSuite) TestEmptyDistribution(c *C) {
   c.Check(Fd.N, Equals, 0)
   c.Check(Fd.FrequencyOf("a sample"), Equals, float64(0))
 }
-
-//   def test_removing_samples
-//     @words.each { |word| @freq_dist << word }
-    
-//     assert_equal @freq_dist.delete("one"), 4
-//     assert_equal @freq_dist.N            , 5
-
-//     assert_raise(RuntimeError) { @freq_dist.delete_if { |sample, value| value == 2 } }
